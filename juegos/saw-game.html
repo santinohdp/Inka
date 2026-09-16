@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bart Simpson Saw Game</title>
+    <title>Saw Game</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -46,11 +46,10 @@
         }
 
         .header-text b {
-            /* === EDITAR MANUALMENTE: colores/etiquetas si se desea === */
             color: #d0021b;
         }
 
-        /* ===== Banderas / idiomas ===== */
+        /* ===== Banderas / idiomas y redes sociales ===== */
         .flags-row {
             width: 600px;
             max-width: 95vw;
@@ -62,66 +61,24 @@
 
         .flags-left {
             display: flex;
-            gap: 8px;
-        }
-
-        .flags-left img {
-            width: 32px;
-            height: 22px;
-            object-fit: cover;
-            border: 1px solid #ccc;
+            gap: 10px;
+            font-size: 26px;
+            line-height: 1;
         }
 
         .social-icons {
             display: flex;
-            gap: 8px;
+            gap: 14px;
+            align-items: center;
         }
 
-        .social-icons a img {
-            width: 28px;
-            height: 28px;
+        .social-icons a {
+            display: inline-flex;
         }
 
-        /* ===== Caja negra con el mensaje/aviso ===== */
-        .notice-box {
-            width: 600px;
-            max-width: 95vw;
-            background: #000000;
-            color: #fff;
-            padding: 30px 20px;
-            text-align: center;
-            border: 2px solid #333;
-            margin-bottom: 20px;
-        }
-
-        .notice-box h1 {
-            color: #37e6e6;
-            font-size: 26px;
-            margin-bottom: 20px;
-        }
-
-        .notice-box p {
-            font-size: 17px;
-            margin-bottom: 18px;
-            line-height: 1.5;
-        }
-
-        .notice-box .highlight {
-            color: #f7d716;
-            font-weight: bold;
-        }
-
-        .notice-box .link {
-            color: #37e6e6;
-            font-weight: bold;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-
-        .notice-box .final {
-            color: #7ee08a;
-            font-weight: bold;
-            font-size: 18px;
+        .social-icons svg {
+            width: 24px;
+            height: 24px;
         }
 
         /* ===== Reproductor Ruffle ===== */
@@ -152,7 +109,7 @@
 
     <!-- ===== Cabecera: EDITAR MANUALMENTE foto, título, descripción y nivel ===== -->
     <div class="header-box">
-        <img class="header-photo" src="https://www.inkagames.com/juego_imagen/80x80_bart_simpson_saw_game.jpg" alt="Foto">
+        <img class="header-photo" src="RUTA_DE_LA_FOTO_AQUI.png" alt="Foto">
         <div class="header-text">
             <p><b>Título:</b> Bart Simpson Saw Game</p>
             <p><b>Descripción:</b> Pigsaw ha encerrado a Bart en su escuela y lo obligará a jugar su juego macabro. Ayuda a Bart a escapar!</p>
@@ -160,35 +117,30 @@
         </div>
     </div>
 
-    <!-- ===== Banderas y redes sociales: EDITAR MANUALMENTE rutas ===== -->
+    <!-- ===== Banderas y redes sociales: EDITAR MANUALMENTE enlaces (href="#") ===== -->
     <div class="flags-row">
         <div class="flags-left">
-            <img src="banderas/es.png" alt="ES">
-            <img src="banderas/us.png" alt="US">
-            <img src="banderas/br.png" alt="BR">
-            <img src="banderas/fr.png" alt="FR">
-            <img src="banderas/de.png" alt="DE">
-            <img src="banderas/ru.png" alt="RU">
+            <span title="Español">🇪🇸</span>
+            <span title="English">🇺🇸</span>
+            <span title="Português">🇧🇷</span>
+            <span title="Français">🇫🇷</span>
+            <span title="Deutsch">🇩🇪</span>
+            <span title="Русский">🇷🇺</span>
         </div>
         <div class="social-icons">
-            <a href="#"><img src="iconos/facebook.png" alt="Facebook"></a>
-            <a href="#"><img src="iconos/mail.png" alt="Mail"></a>
-            <a href="#"><img src="iconos/twitter.png" alt="Twitter"></a>
-            <a href="#"><img src="iconos/home.png" alt="Home"></a>
+            <a href="#" title="Facebook">
+                <svg viewBox="0 0 24 24" fill="#1877F2"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>
+            </a>
+            <a href="#" title="Mail">
+                <svg viewBox="0 0 24 24" fill="#EA4335"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 2v.01L12 12 4 6.01V6h16zM4 18V8.24l7.4 5.55a1 1 0 0 0 1.2 0L20 8.24V18H4z"/></svg>
+            </a>
+            <a href="#" title="Twitter">
+                <svg viewBox="0 0 24 24" fill="#1DA1F2"><path d="M22.46 6c-.77.35-1.6.58-2.46.69a4.3 4.3 0 0 0 1.88-2.37 8.59 8.59 0 0 1-2.72 1.04A4.28 4.28 0 0 0 11.7 8.9c0 .34.04.67.11.98A12.14 12.14 0 0 1 3.16 4.9a4.28 4.28 0 0 0 1.32 5.71 4.24 4.24 0 0 1-1.94-.54v.05a4.28 4.28 0 0 0 3.43 4.2 4.3 4.3 0 0 1-1.93.07 4.29 4.29 0 0 0 4 2.98A8.6 8.6 0 0 1 2 19.54a12.13 12.13 0 0 0 6.57 1.93c7.88 0 12.2-6.53 12.2-12.2 0-.19 0-.37-.01-.56A8.72 8.72 0 0 0 22.46 6z"/></svg>
+            </a>
         </div>
     </div>
 
-    <!-- ===== Aviso estilo "Flash Player deshabilitado": EDITAR MANUALMENTE el texto ===== -->
-    <div class="notice-box">
-        <h1>FLASH PLAYER HA SIDO DESHABILITADO</h1>
-        <p>Busca: <span class="highlight">TU_MARCA_AQUI</span> en Google Play y encontrarás nuestros juegos de aventura</p>
-        <p>Busca <span class="highlight">TU_JUEGO_AQUI</span> en Google Play y encontrarás nuestros juegos misteriosos</p>
-        <p>Síguenos en <span class="link">Facebook</span> haciendo clic aquí y te avisaremos cada vez que subamos un juego nuevo</p>
-        <p class="final">¡SUBIREMOS VARIOS JUEGOS SEMANALMENTE!</p>
-        <p class="final">¡GRACIAS POR VUESTRO APOYO!</p>
-    </div>
-
-    <!-- ===== Reproductor Ruffle (sin cambios funcionales) ===== -->
+    <!-- ===== Reproductor Ruffle ===== -->
     <div id="back-link">
         <a href="../">&larr; Volver al menú</a>
     </div>
@@ -202,7 +154,7 @@
             const player = window.RufflePlayer.newest().createPlayer();
             const container = document.getElementById("container");
             container.appendChild(player);
-            player.load({ url: "bartsimpsonsawgame.swf", backgroundColor: "#000" });
+            player.load({ url: "saw-game.swf", backgroundColor: "#000" });
             player.style.width = "100%";
             player.style.height = "100%";
         });
