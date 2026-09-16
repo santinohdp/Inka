@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saw Game</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        body {
+            background: #0f0f1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        a { color: #e94560; text-decoration: none; margin-bottom: 15px; }
+        a:hover { text-decoration: underline; }
+        #container {
+            width: 550px;
+            height: 400px;
+            max-width: 95vw;
+        }
+    </style>
+</head>
+<body>
+
+<a href="../">&larr; Volver al menú</a>
+
+<div id="container"></div>
+
+<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+<script>
+    window.RufflePlayer = window.RufflePlayer || {};
+    window.addEventListener("load", () => {
+        const player = window.RufflePlayer.newest().createPlayer();
+        const container = document.getElementById("container");
+        container.appendChild(player);
+        player.load({ url: "bartsimpsonsawgame.swf", backgroundColor: "#000" });
+        player.style.width = "100%";
+        player.style.height = "100%";
+    });
+</script>
+
+</body>
+</html>
