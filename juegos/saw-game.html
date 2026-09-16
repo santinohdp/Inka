@@ -3,44 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saw Game</title>
+    <title>Bart Simpson Saw Game</title>
     <style>
-        * { margin: 0; padding: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #0f0f1a;
+            background: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 20px 10px;
         }
-        a { color: #e94560; text-decoration: none; margin-bottom: 15px; }
-        a:hover { text-decoration: underline; }
+
+        /* ===== Cabecera con foto, título, descripción y nivel ===== */
+        .header-box {
+            width: 600px;
+            max-width: 95vw;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            border: 2px solid #a4d65e;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* === EDITAR MANUALMENTE: foto del personaje/juego === */
+        .header-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #6bbf3a; /* color de relleno si no hay foto */
+        }
+
+        .header-text p {
+            font-size: 14px;
+            color: #222;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .header-text b {
+            /* === EDITAR MANUALMENTE: colores/etiquetas si se desea === */
+            color: #d0021b;
+        }
+
+        /* ===== Banderas / idiomas ===== */
+        .flags-row {
+            width: 600px;
+            max-width: 95vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .flags-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .flags-left img {
+            width: 32px;
+            height: 22px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .social-icons a img {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* ===== Caja negra con el mensaje/aviso ===== */
+        .notice-box {
+            width: 600px;
+            max-width: 95vw;
+            background: #000000;
+            color: #fff;
+            padding: 30px 20px;
+            text-align: center;
+            border: 2px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .notice-box h1 {
+            color: #37e6e6;
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        .notice-box p {
+            font-size: 17px;
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .notice-box .highlight {
+            color: #f7d716;
+            font-weight: bold;
+        }
+
+        .notice-box .link {
+            color: #37e6e6;
+            font-weight: bold;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .notice-box .final {
+            color: #7ee08a;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* ===== Reproductor Ruffle ===== */
+        #back-link {
+            width: 600px;
+            max-width: 95vw;
+            margin-bottom: 10px;
+        }
+
+        #back-link a {
+            color: #e94560;
+            text-decoration: none;
+        }
+
+        #back-link a:hover {
+            text-decoration: underline;
+        }
+
         #container {
-            width: 550px;
+            width: 600px;
             height: 400px;
             max-width: 95vw;
+            background: #000;
         }
     </style>
 </head>
 <body>
 
-<a href="../">&larr; Volver al menú</a>
+    <!-- ===== Cabecera: EDITAR MANUALMENTE foto, título, descripción y nivel ===== -->
+    <div class="header-box">
+        <img class="header-photo" src="RUTA_DE_LA_FOTO_AQUI.png" alt="Foto">
+        <div class="header-text">
+            <p><b>Título:</b> Bart Simpson Saw Game</p>
+            <p><b>Descripción:</b> Pigsaw ha encerrado a Bart en su escuela y lo obligará a jugar su juego macabro. Ayuda a Bart a escapar!</p>
+            <p><b>Nivel:</b> Apto para todos</p>
+        </div>
+    </div>
 
-<div id="container"></div>
+    <!-- ===== Banderas y redes sociales: EDITAR MANUALMENTE rutas ===== -->
+    <div class="flags-row">
+        <div class="flags-left">
+            <img src="banderas/es.png" alt="ES">
+            <img src="banderas/us.png" alt="US">
+            <img src="banderas/br.png" alt="BR">
+            <img src="banderas/fr.png" alt="FR">
+            <img src="banderas/de.png" alt="DE">
+            <img src="banderas/ru.png" alt="RU">
+        </div>
+        <div class="social-icons">
+            <a href="#"><img src="iconos/facebook.png" alt="Facebook"></a>
+            <a href="#"><img src="iconos/mail.png" alt="Mail"></a>
+            <a href="#"><img src="iconos/twitter.png" alt="Twitter"></a>
+            <a href="#"><img src="iconos/home.png" alt="Home"></a>
+        </div>
+    </div>
 
-<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-<script>
-    window.RufflePlayer = window.RufflePlayer || {};
-    window.addEventListener("load", () => {
-        const player = window.RufflePlayer.newest().createPlayer();
-        const container = document.getElementById("container");
-        container.appendChild(player);
-        player.load({ url: "bartsimpsonsawgame.swf", backgroundColor: "#000" });
-        player.style.width = "100%";
-        player.style.height = "100%";
-    });
-</script>
+    <!-- ===== Aviso estilo "Flash Player deshabilitado": EDITAR MANUALMENTE el texto ===== -->
+    <div class="notice-box">
+        <h1>FLASH PLAYER HA SIDO DESHABILITADO</h1>
+        <p>Busca: <span class="highlight">TU_MARCA_AQUI</span> en Google Play y encontrarás nuestros juegos de aventura</p>
+        <p>Busca <span class="highlight">TU_JUEGO_AQUI</span> en Google Play y encontrarás nuestros juegos misteriosos</p>
+        <p>Síguenos en <span class="link">Facebook</span> haciendo clic aquí y te avisaremos cada vez que subamos un juego nuevo</p>
+        <p class="final">¡SUBIREMOS VARIOS JUEGOS SEMANALMENTE!</p>
+        <p class="final">¡GRACIAS POR VUESTRO APOYO!</p>
+    </div>
+
+    <!-- ===== Reproductor Ruffle (sin cambios funcionales) ===== -->
+    <div id="back-link">
+        <a href="../">&larr; Volver al menú</a>
+    </div>
+
+    <div id="container"></div>
+
+    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+    <script>
+        window.RufflePlayer = window.RufflePlayer || {};
+        window.addEventListener("load", () => {
+            const player = window.RufflePlayer.newest().createPlayer();
+            const container = document.getElementById("container");
+            container.appendChild(player);
+            player.load({ url: "bartsimpsonsawgame.swf", backgroundColor: "#000" });
+            player.style.width = "100%";
+            player.style.height = "100%";
+        });
+    </script>
 
 </body>
 </html>
