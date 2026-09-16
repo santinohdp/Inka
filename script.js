@@ -1,9 +1,9 @@
 /* ==========================================================================
    CONFIGURACIÓN — EDITAR MANUALMENTE
-   Usa jsDelivr (un CDN que espeja los repos públicos de GitHub) para leer
-   el contenido real de tu repositorio y armar las tarjetas solo. A diferencia
-   de la API de GitHub, jsDelivr no tiene un límite bajo de consultas por hora,
-   así que no se corta con el uso normal de la página.
+   Usa la API de GitHub (en tiempo real) para leer el contenido de las
+   carpetas. Para no gastar el límite de 60 consultas/hora mientras
+   probás y recargás seguido, el resultado se guarda 2 minutos en el
+   navegador (localStorage) antes de volver a consultar.
    ========================================================================== */
 const GITHUB_USER   = "santinohdp";
 const GITHUB_REPO   = "Inka";
@@ -15,35 +15,42 @@ const CARPETA_TRAILER  = "Trailer";
 
 const IMAGE_EXT = ["jpg", "jpeg", "png", "webp", "gif"];
 const JUEGOS_POR_FILA = 5; // cuántas columnas por fila en la grilla principal
+const CACHE_MS = 2 * 60 * 1000; // 2 minutos
 
 /* ========================================================================== */
 
-const RAW_BASE = `https://cdn.jsdelivr.net/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}`;
+async function listarCarpeta(carpeta) {
+    const cacheKey = `carpeta_cache_${carpeta}`;
+    const cacheado = localStorage.getItem(cacheKey);
+    if (cacheado) {
+        try {
+            const { datos, expira } = JSON.parse(cacheado);
+            if (Date.now() < expira) return datos;
+        } catch {}
+    }
 
-// Trae UNA sola vez la lista completa de archivos del repo (no una por carpeta).
-async function listarTodosLosArchivos() {
-    const url = `https://data.jsdelivr.com/v1/packages/gh/${GITHUB_USER}/${GITHUB_REPO}@${GITHUB_BRANCH}?structure=flat`;
+    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${encodeURIComponent(carpeta)}?ref=${GITHUB_BRANCH}`;
     try {
         const res = await fetch(url);
         if (!res.ok) {
-            console.error("jsDelivr respondió", res.status, "al listar el repo");
+            console.error(`GitHub respondió ${res.status} al leer "${carpeta}"`);
+            // si hay algo cacheado aunque esté vencido, mejor usarlo que mostrar vacío
+            if (cacheado) {
+                try { return JSON.parse(cacheado).datos; } catch {}
+            }
             return [];
         }
         const data = await res.json();
-        return Array.isArray(data.files) ? data.files : []; // [{name: "/juegos/x.html", size, hash}, ...]
+        const resultado = Array.isArray(data) ? data : [];
+        localStorage.setItem(cacheKey, JSON.stringify({ datos: resultado, expira: Date.now() + CACHE_MS }));
+        return resultado;
     } catch (err) {
-        console.error("No se pudo leer el repositorio", err);
+        console.error("No se pudo leer la carpeta", carpeta, err);
+        if (cacheado) {
+            try { return JSON.parse(cacheado).datos; } catch {}
+        }
         return [];
     }
-}
-
-// Filtra los archivos que están directamente dentro de "carpeta" (sin subcarpetas)
-function archivosDeCarpeta(todos, carpeta) {
-    const prefijo = `/${carpeta}/`;
-    return todos
-        .filter((f) => f.name.startsWith(prefijo))
-        .filter((f) => !f.name.slice(prefijo.length).includes("/")) // sin subcarpetas
-        .map((f) => ({ ...f, nombreArchivo: f.name.slice(prefijo.length) }));
 }
 
 function nombreLegible(nombreArchivo) {
@@ -55,27 +62,28 @@ function nombreLegible(nombreArchivo) {
         .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function buscarMiniatura(archivosCarpeta, nombreArchivo) {
-    const base = nombreArchivo.replace(/\.html?$/i, "").toLowerCase();
-    const encontrada = archivosCarpeta.find((f) => {
-        const partes = f.nombreArchivo.split(".");
+function buscarMiniatura(archivos, baseNombre) {
+    const base = baseNombre.replace(/\.html?$/i, "").toLowerCase();
+    const encontrada = archivos.find((f) => {
+        if (f.type !== "file") return false;
+        const partes = f.name.split(".");
         const ext = partes.pop().toLowerCase();
         const nombreSinExt = partes.join(".").toLowerCase();
         return IMAGE_EXT.includes(ext) && nombreSinExt === base;
     });
-    return encontrada ? `${RAW_BASE}${encontrada.name}` : null;
+    return encontrada ? encontrada.download_url : null;
 }
 
 // Si subís un archivo de texto "mismo-nombre.txt" junto al juego, se usa
 // como tooltip (title). Si no existe, el tooltip es solo el nombre.
-async function buscarDescripcion(archivosCarpeta, nombreArchivo) {
-    const base = nombreArchivo.replace(/\.html?$/i, "").toLowerCase();
-    const encontrado = archivosCarpeta.find(
-        (f) => f.nombreArchivo.toLowerCase() === `${base}.txt`
+async function buscarDescripcion(archivos, baseNombre) {
+    const base = baseNombre.replace(/\.html?$/i, "").toLowerCase();
+    const encontrado = archivos.find(
+        (f) => f.type === "file" && f.name.toLowerCase() === `${base}.txt`
     );
     if (!encontrado) return null;
     try {
-        const res = await fetch(`${RAW_BASE}${encontrado.name}`);
+        const res = await fetch(encontrado.download_url);
         if (!res.ok) return null;
         return (await res.text()).trim();
     } catch {
@@ -84,20 +92,22 @@ async function buscarDescripcion(archivosCarpeta, nombreArchivo) {
 }
 
 /* ===== Fila de Estrenos / Trailers ===== */
-async function cargarFilaDestacados(todos) {
+async function cargarFilaDestacados() {
     const fila = document.getElementById("fila-destacados-tr");
 
-    const archivosEstrenos = archivosDeCarpeta(todos, CARPETA_ESTRENOS);
-    const archivosTrailer  = archivosDeCarpeta(todos, CARPETA_TRAILER);
+    const [archivosEstrenos, archivosTrailer] = await Promise.all([
+        listarCarpeta(CARPETA_ESTRENOS),
+        listarCarpeta(CARPETA_TRAILER),
+    ]);
 
     const estrenosHtml = archivosEstrenos
-        .filter((f) => /\.html?$/i.test(f.nombreArchivo))
-        .sort((a, b) => a.nombreArchivo.localeCompare(b.nombreArchivo))
+        .filter((f) => f.type === "file" && /\.html?$/i.test(f.name))
+        .sort((a, b) => a.name.localeCompare(b.name))
         .map((f) => ({ archivo: f, archivos: archivosEstrenos, carpeta: CARPETA_ESTRENOS, tipo: "estreno" }));
 
     const trailerHtml = archivosTrailer
-        .filter((f) => /\.html?$/i.test(f.nombreArchivo))
-        .sort((a, b) => a.nombreArchivo.localeCompare(b.nombreArchivo))
+        .filter((f) => f.type === "file" && /\.html?$/i.test(f.name))
+        .sort((a, b) => a.name.localeCompare(b.name))
         .map((f) => ({ archivo: f, archivos: archivosTrailer, carpeta: CARPETA_TRAILER, tipo: "trailer" }));
 
     const items = [...estrenosHtml, ...trailerHtml];
@@ -109,15 +119,15 @@ async function cargarFilaDestacados(todos) {
     }
 
     for (const item of items) {
-        const desc = await buscarDescripcion(item.archivos, item.archivo.nombreArchivo);
-        const nombre = nombreLegible(item.archivo.nombreArchivo);
-        const img = buscarMiniatura(item.archivos, item.archivo.nombreArchivo) || "";
+        const desc = await buscarDescripcion(item.archivos, item.archivo.name);
+        const nombre = nombreLegible(item.archivo.name);
+        const img = buscarMiniatura(item.archivos, item.archivo.name) || "";
 
         const td = document.createElement("td");
         td.className = "celda-destacado";
         td.innerHTML = `
             <div class="headercategorias ${item.tipo}">${item.tipo}</div>
-            <a href="${item.carpeta}/${item.archivo.nombreArchivo}" class="titulojuegoindex" target="_blank" title="${desc || nombre}">
+            <a href="${item.carpeta}/${item.archivo.name}" class="titulojuegoindex" target="_blank" title="${desc || nombre}">
                 <img src="${img}" width="120" height="120" alt="${nombre}">
                 ${nombre}
             </a>
@@ -127,12 +137,12 @@ async function cargarFilaDestacados(todos) {
 }
 
 /* ===== Grilla principal de juegos ===== */
-async function cargarGrillaPrincipal(todos) {
+async function cargarGrillaPrincipal() {
     const tabla = document.getElementById("grilla-juegos");
-    const archivos = archivosDeCarpeta(todos, CARPETA_JUEGOS);
+    const archivos = await listarCarpeta(CARPETA_JUEGOS);
     const htmls = archivos
-        .filter((f) => /\.html?$/i.test(f.nombreArchivo))
-        .sort((a, b) => a.nombreArchivo.localeCompare(b.nombreArchivo));
+        .filter((f) => f.type === "file" && /\.html?$/i.test(f.name))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
     tabla.innerHTML = "";
 
@@ -146,14 +156,14 @@ async function cargarGrillaPrincipal(todos) {
         const grupo = htmls.slice(i, i + JUEGOS_POR_FILA);
 
         for (const archivo of grupo) {
-            const desc = await buscarDescripcion(archivos, archivo.nombreArchivo);
-            const nombre = nombreLegible(archivo.nombreArchivo);
-            const img = buscarMiniatura(archivos, archivo.nombreArchivo) || "";
+            const desc = await buscarDescripcion(archivos, archivo.name);
+            const nombre = nombreLegible(archivo.name);
+            const img = buscarMiniatura(archivos, archivo.name) || "";
 
             const td = document.createElement("td");
             td.className = "celda-juego";
             td.innerHTML = `
-                <a href="${CARPETA_JUEGOS}/${archivo.nombreArchivo}" class="titulojuegoindex" target="_blank" title="${desc || nombre}">
+                <a href="${CARPETA_JUEGOS}/${archivo.name}" class="titulojuegoindex" target="_blank" title="${desc || nombre}">
                     <img src="${img}" width="100" height="100" alt="${nombre}">
                     ${nombre}
                 </a>
@@ -165,8 +175,5 @@ async function cargarGrillaPrincipal(todos) {
     }
 }
 
-(async () => {
-    const todos = await listarTodosLosArchivos();
-    cargarFilaDestacados(todos);
-    cargarGrillaPrincipal(todos);
-})();
+cargarFilaDestacados();
+cargarGrillaPrincipal();
