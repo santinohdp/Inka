@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lady Gaga Saw Game</title>
+    <link rel="icon" type="image/png" href="../favicon-obama.png">
+    <!-- Hoja de estilos original del motor WAFlash -->
+    <link href="https://cdn.jsdelivr.net/gh/isteiger/waflash@main/style.css" rel="stylesheet" type="text/css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -72,7 +75,8 @@
         #back-link a { color: #e94560; text-decoration: none; }
         #back-link a:hover { text-decoration: underline; }
 
-        #container {
+        /* ===== Escenario del motor WAFlash ===== */
+        #waflashContainer {
             width: 600px;
             height: 400px;
             max-width: 95vw;
@@ -80,11 +84,47 @@
             position: relative;
             overflow: hidden;
         }
-        #container ruffle-player {
-            display: block;
+        .waflashCanvas {
             width: 100% !important;
             height: 100% !important;
+            display: block;
+            outline: none;
+            background: #000;
         }
+        #waflashStatus {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
+            color: #fff;
+            background: rgba(0,0,0,.65);
+            border-radius: 6px;
+            padding: 8px 14px;
+            pointer-events: none;
+        }
+
+        .barra-juego {
+            width: 600px;
+            max-width: 95vw;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding-top: 8px;
+        }
+        .barra-juego button {
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            color: #222;
+        }
+        .barra-juego button:hover { border-color: #6bbf3a; }
+        .barra-juego .nota { font-size: 12px; color: #888; margin-left: auto; }
     </style>
 </head>
 <body>
@@ -124,19 +164,89 @@
         <a href="../">&larr; Volver al menú</a>
     </div>
 
-    <div id="container"></div>
+    <!-- Escenario: el motor WAFlash necesita este contenedor, el canvas#canvas y #waflashStatus -->
+    <div id="waflashContainer">
+        <canvas class="waflashCanvas" id="canvas" tabindex="1"></canvas>
+        <div id="waflashStatus">Cargando el juego...</div>
+    </div>
 
-    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-    <script>
-        window.RufflePlayer = window.RufflePlayer || {};
-        window.addEventListener("load", () => {
-            const player = window.RufflePlayer.newest().createPlayer();
-            const container = document.getElementById("container");
-            container.appendChild(player);
-            player.load({ url: "lady-gaga-saw-game.swf", backgroundColor: "#000" });
-            player.style.width = "100%";
-            player.style.height = "100%";
+    <div class="barra-juego">
+        <button type="button" id="btn-full">Pantalla completa</button>
+        <button type="button" id="btn-reiniciar">Reiniciar</button>
+        <span class="nota">Motor: WAFlash (WebAssembly)</span>
+    </div>
+
+    <!--
+      Motor WAFlash (fork isteiger/waflash) cargado directamente desde jsDelivr.
+      El .swf de este juego se carga solo, no hay que elegir ningún archivo.
+    -->
+    <script type="module">
+      import createWaflashModule from "https://cdn.jsdelivr.net/gh/isteiger/waflash@main/waflash.min.js?2022091801";
+
+      var WAFLASH_BASE = "https://cdn.jsdelivr.net/gh/isteiger/waflash@main/";
+
+      // URL del juego: se arma sola a partir del nombre del archivo .swf
+      var SWF_URL = new URL("lady-gaga-saw-game.swf", location.href).href;
+
+      var statusEl = document.getElementById("waflashStatus");
+      var canvasEl = document.getElementById("canvas");
+      canvasEl.addEventListener("webglcontextlost", function (e) {
+        e.preventDefault();
+        statusEl.style.display = "block";
+        statusEl.textContent = "Se perdió el contexto WebGL. Recargá la página.";
+      }, false);
+
+      var waflashModule = null;
+
+      function armarModulo() {
+        var mod = {
+          arguments: [SWF_URL, "0", "default", "1"],
+          options: {},
+          preRun: [],
+          postRun: [],
+          locateFile: function (ruta) { return WAFLASH_BASE + ruta + "?2022091801"; },
+          print: function (t) { console.log(t); },
+          printErr: function (t) { console.error(t); },
+          canvas: canvasEl,
+          statusElement: statusEl,
+          setStatus: function (t) {
+            if (!t) { statusEl.style.display = "none"; return; }
+            console.log("WAFLASH> " + t);
+            if (t.indexOf("Downloading data") === 0) t = "Descargando el reproductor...";
+            if (t.indexOf("Downloading player") === 0) t = "Descargando el reproductor...";
+            if (t.indexOf("Loading SWF") === 0) t = "Cargando el juego...";
+            statusEl.textContent = t;
+            statusEl.style.display = "block";
+          },
+          showStatus: function () { statusEl.style.display = "block"; },
+          hideStatus: function () { statusEl.style.display = "none"; },
+          unload: function () {}
+        };
+        return mod;
+      }
+
+      function iniciarJuego() {
+        waflashModule = armarModulo();
+        window.waflash = waflashModule;
+        waflashModule.setStatus("Preparando el juego...");
+        createWaflashModule(waflashModule).then(function () {
+          console.log("WAFLASH> motor iniciado con " + SWF_URL);
+        }).catch(function (err) {
+          console.error(err);
+          waflashModule.setStatus("No se pudo iniciar el juego.");
         });
+      }
+
+      document.getElementById("btn-full").addEventListener("click", function () {
+        var cont = document.getElementById("waflashContainer");
+        if (cont.requestFullscreen) cont.requestFullscreen();
+      });
+
+      document.getElementById("btn-reiniciar").addEventListener("click", function () {
+        location.reload();
+      });
+
+      iniciarJuego();
     </script>
 
 </body>
